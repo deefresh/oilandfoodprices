@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Global Commodity Impact Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3/dist/chartjs-plugin-annotation.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #080b14;
+      --bg2: #0d1220;
+      --card: #111827;
+      --card2: #1a2235;
+      --border: rgba(255,255,255,0.07);
+      --border2: rgba(255,255,255,0.12);
+      --text: #e8edf5;
+      --muted: #7b8fa8;
+      --muted2: #a3b4c8;
+      --oil: #f59e0b;
+      --oil2: #fcd34d;
+      --food: #22c55e;
+      --food2: #86efac;
+      --red: #ef4444;
+      --red2: #fca5a5;
+      --blue: #3b82f6;
+      --blue2: #93c5fd;
+      --purple: #a855f7;
+      --purple2: #d8b4fe;
+      --pos: #22c55e;
+      --neg: #ef4444;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+
+    /* ── HEADER ── */
+    .site-header {
+      background: linear-gradient(180deg, #0d1525 0%, var(--bg) 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 40px 24px 32px;
+      text-align: center;
+    }
+    .site-header h1 {
+      font-size: clamp(1.6rem, 4vw, 2.5rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-bottom: 10px;
+      background: linear-gradient(135deg, #e8edf5 0%, #a3b4c8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .site-header p {
+      color: var(--muted2);
+      font-size: 0.95rem;
+      max-width: 620px;
+      margin: 0 auto;
+      font-weight: 400;
+    }
+    .last-updated {
+      display: inline-block;
+      margin-top: 14px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 4px 14px;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    /* ── TABS ── */
+    .tab-nav {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      padding: 24px 16px 0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0;
+    }
+    .tab-btn {
+      position: relative;
+      background: none;
+      border: none;
+      color: var(--muted2);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 600;
+      padding: 14px 28px;
+      cursor: pointer;
+      transition: color 0.2s;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -1px;
+    }
+    .tab-btn:hover { color: var(--text); }
+    .tab-btn.active-oil { color: var(--oil); border-bottom-color: var(--oil); }
+    .tab-btn.active-food { color: var(--food); border-bottom-color: var(--food); }
+    .tab-icon { font-size: 1.1rem; margin-right: 8px; }
+
+    /* ── LAYOUT ── */
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 28px 20px 60px;
+    }
+
+    /* ── STAT CARDS ── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px 22px;
+    }
+    .stat-label { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; font-weight: 600; }
+    .stat-value { font-size: 1.65rem; font-weight: 800; letter-spacing: -0.03em; }
+    .stat-value.oil-color { color: var(--oil); }
+    .stat-value.food-color { color: var(--food); }
+    .stat-value.pos { color: var(--pos); }
+    .stat-value.neg { color: var(--neg); }
+    .stat-sub { font-size: 0.75rem; color: var(--muted); margin-top: 4px; }
+
+    /* ── PANELS ── */
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px;
+      margin-bottom: 20px;
+    }
+    .panel-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+      letter-spacing: -0.01em;
+    }
+    .panel-sub {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 22px;
+    }
+
+    /* ── CHART WRAPPERS ── */
+    .chart-wrap {
+      position: relative;
+      width: 100%;
+    }
+    .chart-wrap canvas { display: block; }
+
+    /* ── EVENT LEGEND ── */
+    .event-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 20px;
+      padding-top: 18px;
+      border-top: 1px solid var(--border);
+    }
+    .ev-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      background: var(--card2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 0.75rem;
+      max-width: 340px;
+      flex: 1 1 280px;
+    }
+    .ev-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-top: 2px; }
+    .ev-year { font-weight: 700; color: var(--text); }
+    .ev-desc { color: var(--muted2); }
+
+    /* ── TABLE ── */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+    }
+    .data-table th {
+      text-align: left;
+      padding: 10px 14px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+    }
+    .data-table td {
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      vertical-align: middle;
+    }
+    .data-table tr:last-child td { border-bottom: none; }
+    .data-table tr:hover td { background: rgba(255,255,255,0.025); }
+    .td-name { font-weight: 600; color: var(--text); }
+    .td-price { font-weight: 700; font-variant-numeric: tabular-nums; }
+    .td-pos { color: var(--pos); font-weight: 700; }
+    .td-neg { color: var(--neg); font-weight: 700; }
+    .td-muted { color: var(--muted2); font-size: 0.82rem; }
+    .corr-badge {
+      display: inline-block;
+      background: rgba(255,255,255,0.06);
+      border-radius: 4px;
+      padding: 2px 8px;
+      font-size: 0.72rem;
+      color: var(--muted2);
+    }
+    .note-badge {
+      display: inline-block;
+      background: rgba(245,158,11,0.12);
+      color: #fcd34d;
+      border-radius: 4px;
+      padding: 2px 8px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      margin-left: 6px;
+    }
+
+    /* ── STATE CHART ── */
+    .state-chart-wrap {
+      position: relative;
+      width: 100%;
+      height: 1060px;
+    }
+    .state-legend {
+      display: flex;
+      gap: 18px;
+      align-items: center;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+    .sl-item {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 0.8rem;
+      color: var(--muted2);
+    }
+    .sl-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+    }
+
+    /* ── SECTION DIVIDER ── */
+    .section-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      margin: 32px 0 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    .section-label.oil { color: var(--oil); border-bottom-color: rgba(245,158,11,0.25); }
+    .section-label.food { color: var(--food); border-bottom-color: rgba(34,197,94,0.25); }
+
+    @media (max-width: 768px) {
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
+      .panel { padding: 20px; }
+      .state-chart-wrap { height: 820px; }
+    }
+    @media (max-width: 480px) {
+      .stats-row { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="site-header">
+  <h1>Global Commodity Impact Dashboard</h1>
+  <p>How world events shape the price of oil &amp; food — and what that means for your household, your investments, and your state</p>
+  <span class="last-updated">Data: approximate historical values &amp; estimates through Q1 2025</span>
+</header>
+
+<nav class="tab-nav">
+  <button class="tab-btn active-oil" data-tab="oil" onclick="switchTab('oil')">
+    <span class="tab-icon">🛢️</span>Oil &amp; Energy
+  </button>
+  <button class="tab-btn" data-tab="food" onclick="switchTab('food')">
+    <span class="tab-icon">🌾</span>Food &amp; Agriculture
+  </button>
+</nav>
+
+<!-- ══════════════════════════════════════════════════════════
+     OIL TAB
+════════════════════════════════════════════════════════════ -->
+<div id="tab-oil" class="tab-content active">
+<div class="container">
+
+  <div class="stats-row" style="margin-top:24px">
+    <div class="stat-card">
+      <div class="stat-label">WTI Crude Oil</div>
+      <div class="stat-value oil-color">$71.50</div>
+      <div class="stat-sub">per barrel · Mar 2025</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">YTD Change</div>
+      <div class="stat-value neg">−8.2%</div>
+      <div class="stat-sub">vs Jan 1, 2025</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">52-Week High</div>
+      <div class="stat-value" style="color:var(--muted2)">$87.63</div>
+      <div class="stat-sub">Apr 5, 2024</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">52-Week Low</div>
+      <div class="stat-value" style="color:var(--muted2)">$65.27</div>
+      <div class="stat-sub">Sep 10, 2024</div>
+    </div>
+  </div>
+
+  <p class="section-label oil">50-Year Price History</p>
+  <div class="panel">
+    <div class="panel-title">WTI Crude Oil Price (1975 – 2025)</div>
+    <div class="panel-sub">Annual average $/barrel · Annotated with major price-moving events</div>
+    <div class="chart-wrap" style="height:370px"><canvas id="oilHistoryChart"></canvas></div>
+    <div class="event-legend" id="oilEvLegend"></div>
+  </div>
+
+  <p class="section-label oil">Related Commodity Prices</p>
+  <div class="panel">
+    <div class="panel-title">Oil &amp; Correlated Commodity Prices</div>
+    <div class="panel-sub">Current market prices for commodities that move with crude oil</div>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Commodity</th>
+          <th>Price</th>
+          <th>Unit</th>
+          <th>YTD Change</th>
+          <th>Correlation to Oil</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody id="oilCommodityTbody"></tbody>
+    </table>
+  </div>
+
+  <p class="section-label oil">Market Winners &amp; Losers</p>
+  <div class="panel">
+    <div class="panel-title">Top 5 Companies That Benefit During Oil Price Spikes</div>
+    <div class="panel-sub">Annual stock price (USD) · 2010 – 2025 · Integrated majors &amp; E&amp;P producers</div>
+    <div class="chart-wrap" style="height:340px"><canvas id="oilBenChart"></canvas></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Top 5 Companies Hurt by High Oil Prices</div>
+    <div class="panel-sub">Annual stock price (USD) · 2010 – 2025 · Airlines &amp; fuel-intensive industries</div>
+    <div class="chart-wrap" style="height:340px"><canvas id="oilHurtChart"></canvas></div>
+  </div>
+
+  <p class="section-label oil">Quality of Life Impact by State</p>
+  <div class="panel">
+    <div class="panel-title">How Oil Price Spikes Hit Each State</div>
+    <div class="panel-sub">Composite impact score (0–100) based on energy burden (% income on energy), avg commute costs &amp; poverty rate · Colored by 2020 presidential election result</div>
+    <div class="state-legend">
+      <div class="sl-item"><div class="sl-dot" style="background:rgba(239,68,68,0.75)"></div>Republican-leaning state</div>
+      <div class="sl-item"><div class="sl-dot" style="background:rgba(59,130,246,0.75)"></div>Democrat-leaning state</div>
+      <div class="sl-item"><div class="sl-dot" style="background:rgba(168,85,247,0.75)"></div>Swing / battleground state</div>
+    </div>
+    <div class="state-chart-wrap"><canvas id="oilStateChart"></canvas></div>
+  </div>
+
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     FOOD TAB
+════════════════════════════════════════════════════════════ -->
+<div id="tab-food" class="tab-content">
+<div class="container">
+
+  <div class="stats-row" style="margin-top:24px">
+    <div class="stat-card">
+      <div class="stat-label">FAO Food Price Index</div>
+      <div class="stat-value food-color">118.4</div>
+      <div class="stat-sub">Index pts (2014-16 = 100) · Mar 2025</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">YTD Change</div>
+      <div class="stat-value neg">−3.7%</div>
+      <div class="stat-sub">vs Jan 1, 2025</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">All-Time High</div>
+      <div class="stat-value" style="color:var(--muted2)">159.7</div>
+      <div class="stat-sub">Mar 2022 (Russia-Ukraine)</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">2008 Crisis Peak</div>
+      <div class="stat-value" style="color:var(--muted2)">166.0</div>
+      <div class="stat-sub">Jun 2008 (Global Food Crisis)</div>
+    </div>
+  </div>
+
+  <p class="section-label food">50-Year Price History</p>
+  <div class="panel">
+    <div class="panel-title">FAO Global Food Price Index (1975 – 2025)</div>
+    <div class="panel-sub">Annual composite index (2014–2016 baseline = 100) · Annotated with major food crises and supply shocks</div>
+    <div class="chart-wrap" style="height:370px"><canvas id="foodHistoryChart"></canvas></div>
+    <div class="event-legend" id="foodEvLegend"></div>
+  </div>
+
+  <p class="section-label food">Related Commodity Prices</p>
+  <div class="panel">
+    <div class="panel-title">Food &amp; Agricultural Commodity Prices</div>
+    <div class="panel-sub">Current market prices for key food commodities tracked by the FAO</div>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Commodity</th>
+          <th>Price</th>
+          <th>Unit</th>
+          <th>YTD Change</th>
+          <th>Correlation to Index</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody id="foodCommodityTbody"></tbody>
+    </table>
+  </div>
+
+  <p class="section-label food">Market Winners &amp; Losers</p>
+  <div class="panel">
+    <div class="panel-title">Top 5 Companies That Benefit During Food Price Spikes</div>
+    <div class="panel-sub">Annual stock price (USD) · 2010 – 2025 · Grain traders, fertilizer producers &amp; agri-input companies</div>
+    <div class="chart-wrap" style="height:340px"><canvas id="foodBenChart"></canvas></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Top 5 Companies Hurt by High Food Prices</div>
+    <div class="panel-sub">Annual stock price (USD) · 2010 – 2025 · Food manufacturers, processors &amp; restaurant chains facing margin compression</div>
+    <div class="chart-wrap" style="height:340px"><canvas id="foodHurtChart"></canvas></div>
+  </div>
+
+  <p class="section-label food">Quality of Life Impact by State</p>
+  <div class="panel">
+    <div class="panel-title">How Food Price Spikes Hit Each State</div>
+    <div class="panel-sub">Composite impact score (0–100) based on food insecurity rate, SNAP dependency, % income on food &amp; poverty rate · Colored by 2020 presidential election result</div>
+    <div class="state-legend">
+      <div class="sl-item"><div class="sl-dot" style="background:rgba(239,68,68,0.75)"></div>Republican-leaning state</div>
+      <div class="sl-item"><div class="sl-dot" style="background:rgba(59,130,246,0.75)"></div>Democrat-leaning state</div>
+      <div class="sl-item"><div class="sl-dot" style="background:rgba(168,85,247,0.75)"></div>Swing / battleground state</div>
+    </div>
+    <div class="state-chart-wrap"><canvas id="foodStateChart"></canvas></div>
+  </div>
+
+</div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// CHART.JS GLOBAL DEFAULTS
+// ═══════════════════════════════════════════════════════════
+Chart.defaults.color = '#7b8fa8';
+Chart.defaults.font.family = "'Inter', sans-serif";
+Chart.defaults.font.size = 12;
+Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(10,15,25,0.95)';
+Chart.defaults.plugins.tooltip.borderColor = 'rgba(255,255,255,0.1)';
+Chart.defaults.plugins.tooltip.borderWidth = 1;
+Chart.defaults.plugins.tooltip.titleColor = '#a3b4c8';
+Chart.defaults.plugins.tooltip.bodyColor = '#e8edf5';
+Chart.defaults.plugins.tooltip.padding = 12;
+Chart.defaults.plugins.tooltip.cornerRadius = 8;
+
+// ═══════════════════════════════════════════════════════════
+// SHARED SCALE DEFAULTS
+// ═══════════════════════════════════════════════════════════
+const gridColor = 'rgba(255,255,255,0.05)';
+const tickColor = '#7b8fa8';
+
+function linearXScale(min, max, step) {
+  return {
+    type: 'linear', min, max,
+    ticks: { stepSize: step, color: tickColor, font: { size: 11 } },
+    grid: { color: gridColor }
+  };
+}
+
+function dollarYScale(label) {
+  return {
+    ticks: { color: tickColor, font: { size: 11 }, callback: v => '$' + v },
+    grid: { color: gridColor },
+    title: { display: !!label, text: label || '', color: tickColor, font: { size: 11 } }
+  };
+}
+
+// ═══════════════════════════════════════════════════════════
+// EVENT ANNOTATION BUILDER
+// ═══════════════════════════════════════════════════════════
+function buildAnnotations(events) {
+  const ann = {};
+  events.forEach((e, i) => {
+    ann['e' + i] = {
+      type: 'line',
+      xMin: e.year, xMax: e.year,
+      borderColor: e.color + 'bb',
+      borderWidth: 1.5,
+      borderDash: [5, 4],
+      label: {
+        display: true,
+        content: e.label,
+        rotation: -90,
+        position: (i % 3 === 0) ? 'start' : (i % 3 === 1) ? '18%' : '36%',
+        yAdjust: 10,
+        color: e.color,
+        backgroundColor: 'rgba(8,11,20,0.88)',
+        font: { size: 9, weight: '600', family: "'Inter', sans-serif" },
+        padding: { x: 4, y: 3 }
+      }
+    };
+  });
+  return ann;
+}
+
+// ═══════════════════════════════════════════════════════════
+// OIL DATA
+// ═══════════════════════════════════════════════════════════
+const OIL = {
+  prices: [12,13,14,14,25,35,36,33,29,29,27,14,18,15,18,24,21,20,17,17,17,22,19,13,18,30,26,26,31,41,56,66,72,100,62,79,95,94,98,93,49,43,51,65,57,42,68,95,77,76,70],
+
+  events: [
+    { year: 1973, label: 'Arab\nEmbargo', color: '#ef4444',
+      desc: '1973 Arab Oil Embargo — OPEC nations embargo the US and Western allies. Oil prices quadruple in months, causing long gas lines and a global recession scare.' },
+    { year: 1979, label: 'Iranian\nRevolution', color: '#f97316',
+      desc: '1979 Iranian Revolution — Shah overthrown, Iran\'s output collapses. Prices double, triggering the "Second Oil Crisis" and global stagflation.' },
+    { year: 1986, label: 'OPEC\nCollapse', color: '#3b82f6',
+      desc: '1986 OPEC Price War — Saudi Arabia abandons quotas to reclaim market share. Oil crashes 68%, devastating oil-state economies.' },
+    { year: 1990, label: 'Gulf\nWar', color: '#f59e0b',
+      desc: '1990 Gulf War — Iraq invades Kuwait, threatening Saudi supply. Prices spike 70% before collapsing after the Coalition\'s swift victory.' },
+    { year: 1998, label: 'Asian\nCrisis', color: '#3b82f6',
+      desc: '1998 Asian Financial Crisis — Asian demand collapses; OPEC over-produces. WTI hits ~$10/barrel, a 12-year low.' },
+    { year: 2008, label: '2008\nSpike & Crash', color: '#ef4444',
+      desc: '2008 Global Financial Crisis — Oil peaks at $147/barrel in July 2008, then crashes 77% in 6 months as the global recession destroys demand.' },
+    { year: 2014, label: 'Shale\nOversupply', color: '#3b82f6',
+      desc: '2014-16 US Shale Boom — US shale output surges; OPEC refuses to cut production. Oil collapses from $107 to ~$26, its lowest since 2002.' },
+    { year: 2020, label: 'COVID-19', color: '#6366f1',
+      desc: '2020 COVID-19 Pandemic — Global lockdowns destroy demand. WTI futures go briefly negative (−$37/barrel) in April 2020, a historic first.' },
+    { year: 2022, label: 'Russia-\nUkraine', color: '#ef4444',
+      desc: '2022 Russia-Ukraine War — Western sanctions on Russia (world\'s #2 oil exporter) push Brent to $128/barrel before gradual retreat.' }
+  ],
+
+  commodities: [
+    { name: 'WTI Crude Oil',        price: '$71.50',  unit: '/ barrel', chg: -8.2,  corr: 'Benchmark',       note: '' },
+    { name: 'Brent Crude Oil',      price: '$75.25',  unit: '/ barrel', chg: -7.6,  corr: 'Very High (0.97)', note: 'Global benchmark' },
+    { name: 'Natural Gas (HH)',     price: '$2.85',   unit: '/ MMBtu',  chg: -12.4, corr: 'High (0.74)',      note: '' },
+    { name: 'Gasoline (RBOB)',      price: '$2.22',   unit: '/ gallon', chg: -5.8,  corr: 'Very High (0.95)', note: 'Refinery output' },
+    { name: 'Diesel (ULSD)',        price: '$2.68',   unit: '/ gallon', chg: -9.1,  corr: 'Very High (0.94)', note: '' },
+    { name: 'Jet Fuel',             price: '$2.45',   unit: '/ gallon', chg: -6.3,  corr: 'Very High (0.93)', note: 'Airline cost driver' },
+    { name: 'Heating Oil',          price: '$2.52',   unit: '/ gallon', chg: -8.7,  corr: 'Very High (0.96)', note: 'NE US heating' },
+    { name: 'Propane',              price: '$0.78',   unit: '/ gallon', chg: -14.2, corr: 'High (0.78)',      note: 'Rural heat/cooking' },
+    { name: 'Polyethylene (HDPE)',  price: '$0.68',   unit: '/ lb',     chg: -2.1,  corr: 'Moderate (0.65)', note: 'Plastic packaging' },
+    { name: 'Polypropylene',        price: '$0.72',   unit: '/ lb',     chg: -1.8,  corr: 'Moderate (0.63)', note: 'Auto / industrial' },
+    { name: 'Ammonia (Fertilizer)', price: '$380',    unit: '/ tonne',  chg: -18.5, corr: 'High (0.82)',     note: 'Nat gas feedstock' },
+  ],
+
+  stockYears: [2010,2011,2012,2013,2014,2015,2016,2017,2018,2019,2020,2021,2022,2023,2024,2025],
+
+  beneficiaries: [
+    { name: 'ExxonMobil (XOM)',       color: '#f59e0b', prices: [73,85,87,101,93,78,90,83,69,70,42,62,110,102,115,108] },
+    { name: 'Chevron (CVX)',          color: '#fcd34d', prices: [91,106,108,124,112,90,116,127,113,120,85,116,182,153,155,148] },
+    { name: 'ConocoPhillips (COP)',   color: '#fb923c', prices: [59,73,61,72,65,45,50,53,69,68,37,70,118,118,95,92] },
+    { name: 'EOG Resources (EOG)',    color: '#f97316', prices: [75,102,119,175,98,68,90,98,111,93,52,100,147,123,120,115] },
+    { name: 'Marathon Petroleum (MPC)', color: '#ef4444', prices: [38,48,58,66,74,68,64,72,68,81,31,65,135,162,165,155] }
+  ],
+
+  sufferers: [
+    { name: 'Delta Air Lines (DAL)',   color: '#60a5fa', prices: [14,9,11,27,49,52,48,53,50,58,22,40,36,43,55,52] },
+    { name: 'United Airlines (UAL)',   color: '#818cf8', prices: [21,19,19,40,65,60,68,63,78,85,32,50,37,50,88,82] },
+    { name: 'American Airlines (AAL)', color: '#34d399', prices: [8,4,3,25,55,42,49,53,33,30,10,18,14,15,15,12] },
+    { name: 'Southwest Airlines (LUV)',color: '#a78bfa', prices: [12,8,9,17,38,46,51,59,51,55,30,48,33,27,29,32] },
+    { name: 'JetBlue Airways (JBLU)', color: '#38bdf8', prices: [7,5,6,9,16,24,23,23,19,21,8,17,9,7,4,5] }
+  ],
+
+  stateImpact: [
+    { s:'MS', name:'Mississippi',    score:83, lean:'red',    desc:'Highest energy burden in US (~8.1% of income), extreme rural poverty, very long commutes' },
+    { s:'WV', name:'West Virginia',  score:81, lean:'red',    desc:'High heating oil dependency, severe rural poverty, declining coal/industrial economy' },
+    { s:'AL', name:'Alabama',        score:79, lean:'red',    desc:'Energy burden ~7.4%, car-dependent suburbs, low median household income' },
+    { s:'AR', name:'Arkansas',       score:77, lean:'red',    desc:'Rural state with very long commutes, high energy costs relative to income' },
+    { s:'LA', name:'Louisiana',      score:75, lean:'red',    desc:'High energy burden, poor coastal communities, extreme weather demands A/C and heat' },
+    { s:'KY', name:'Kentucky',       score:73, lean:'red',    desc:'Cold Appalachian winters, high heating costs, significant rural poverty' },
+    { s:'TN', name:'Tennessee',      score:71, lean:'red',    desc:'Car-dependent sprawl, no major transit outside Nashville, mid-level incomes' },
+    { s:'OK', name:'Oklahoma',       score:69, lean:'red',    desc:'Rural state, very long driving distances; state oil revenue partially offsets' },
+    { s:'MT', name:'Montana',        score:67, lean:'red',    desc:'Vast rural distances, extreme cold winters, very long commutes to services' },
+    { s:'ME', name:'Maine',          score:65, lean:'blue',   desc:'~40% of homes use heating oil — highest rate in the US; very cold winters' },
+    { s:'WY', name:'Wyoming',        score:63, lean:'red',    desc:'Huge rural distances; partly offset by oil & gas industry wages' },
+    { s:'NM', name:'New Mexico',     score:61, lean:'blue',   desc:'High poverty rate, rural tribal communities, very long commutes' },
+    { s:'ND', name:'North Dakota',   score:59, lean:'red',    desc:'Extreme cold, rural; oil industry wages cushion impact for many workers' },
+    { s:'SD', name:'South Dakota',   score:57, lean:'red',    desc:'Cold, rural, long distances between towns, moderate poverty' },
+    { s:'VT', name:'Vermont',        score:55, lean:'blue',   desc:'Very cold winters, significant heating oil use, rural communities' },
+    { s:'ID', name:'Idaho',          score:53, lean:'red',    desc:'Rapidly growing rural state, long commutes, limited public transit' },
+    { s:'SC', name:'South Carolina', score:51, lean:'red',    desc:'Hot summers (high A/C costs), suburban sprawl, car-dependent metros' },
+    { s:'NH', name:'New Hampshire',  score:49, lean:'purple', desc:'Cold, heating oil dependent, no state income/sales tax limits fiscal cushion' },
+    { s:'IA', name:'Iowa',           score:48, lean:'red',    desc:'Agricultural commutes, cold winters, mid-range household incomes' },
+    { s:'MO', name:'Missouri',       score:47, lean:'red',    desc:'Suburban sprawl around KC and St. Louis, rural Ozarks poverty' },
+    { s:'KS', name:'Kansas',         score:45, lean:'red',    desc:'Flat, rural, very long driving distances across the Great Plains' },
+    { s:'IN', name:'Indiana',        score:44, lean:'red',    desc:'Industrial state, heavy freight fuel costs, car-dependent suburbs' },
+    { s:'NE', name:'Nebraska',       score:42, lean:'red',    desc:'Rural agricultural state, long distances, cold winters' },
+    { s:'AK', name:'Alaska',         score:41, lean:'red',    desc:'Remote, high fuel costs; Permanent Fund dividends provide some offset' },
+    { s:'GA', name:'Georgia',        score:39, lean:'purple', desc:'Atlanta suburban sprawl, heavy car dependence, growing low-income exurbs' },
+    { s:'NC', name:'North Carolina', score:38, lean:'purple', desc:'Suburban sprawl, growing car dependence, moderate but uneven incomes' },
+    { s:'OH', name:'Ohio',           score:37, lean:'red',    desc:'Rust belt cities, industrial heating costs, rural eastern Appalachia' },
+    { s:'TX', name:'Texas',          score:36, lean:'red',    desc:'Massive driving distances; large oil industry wages buffer impact for many' },
+    { s:'NV', name:'Nevada',         score:34, lean:'purple', desc:'Car-dependent Las Vegas metro, service worker economy with tight margins' },
+    { s:'AZ', name:'Arizona',        score:33, lean:'purple', desc:'Phoenix sprawl, extreme heat (high A/C costs), fast-growing population' },
+    { s:'FL', name:'Florida',        score:31, lean:'purple', desc:'Mild climate helps reduce heating need; but car-dependent, large service sector' },
+    { s:'WI', name:'Wisconsin',      score:30, lean:'purple', desc:'Cold winters, moderate rural areas, modest household incomes' },
+    { s:'MI', name:'Michigan',       score:29, lean:'purple', desc:'Cold winters; auto-industry wages provide some buffer' },
+    { s:'PA', name:'Pennsylvania',   score:28, lean:'purple', desc:'Mixed urban transit (Philly/Pittsburgh) and rural; heating oil in eastern PA' },
+    { s:'MN', name:'Minnesota',      score:26, lean:'blue',   desc:'Very cold winters but higher incomes and good state infrastructure' },
+    { s:'OR', name:'Oregon',         score:25, lean:'blue',   desc:'Mild Willamette Valley climate, Portland transit, moderate incomes' },
+    { s:'CO', name:'Colorado',       score:24, lean:'blue',   desc:'Denver RTD transit, higher incomes, strong EV adoption trend' },
+    { s:'DE', name:'Delaware',       score:22, lean:'blue',   desc:'Small, largely urban, access to Philly/DC corridor rail' },
+    { s:'VA', name:'Virginia',       score:21, lean:'blue',   desc:'DC Metro transit access, high federal & tech employee incomes' },
+    { s:'RI', name:'Rhode Island',   score:20, lean:'blue',   desc:'Small, urban, transit access to Boston and Providence' },
+    { s:'HI', name:'Hawaii',         score:18, lean:'blue',   desc:'High fuel prices but compact islands; growing EV & solar adoption' },
+    { s:'CT', name:'Connecticut',    score:17, lean:'blue',   desc:'NYC/Boston rail corridor, high median incomes absorb price spikes' },
+    { s:'MD', name:'Maryland',       score:16, lean:'blue',   desc:'DC Metro transit, very high federal and professional incomes' },
+    { s:'IL', name:'Illinois',       score:15, lean:'blue',   desc:'Chicago CTA & Metra transit system; moderate statewide incomes' },
+    { s:'CA', name:'California',     score:15, lean:'blue',   desc:'LA is car-dependent but statewide EV leadership; high incomes in tech hubs' },
+    { s:'NJ', name:'New Jersey',     score:14, lean:'blue',   desc:'NJ Transit / NYC/Philly rail, highest median income among large states' },
+    { s:'MA', name:'Massachusetts',  score:12, lean:'blue',   desc:'MBTA transit, high incomes, top-5 EV adoption rate nationally' },
+    { s:'WA', name:'Washington',     score:11, lean:'blue',   desc:'EV & hydropower leader, Seattle Link Light Rail, high tech incomes' },
+    { s:'NY', name:'New York',       score:10, lean:'blue',   desc:'Extensive MTA transit; large share of NYC residents are car-free' },
+    { s:'UT', name:'Utah',           score:13, lean:'red',    desc:'Growing TRAX corridor transit, lower poverty, younger & active workforce' },
+  ]
+};
+
+// ═══════════════════════════════════════════════════════════
+// FOOD DATA
+// ═══════════════════════════════════════════════════════════
+const FOOD = {
+  prices: [38,40,43,46,55,68,70,65,62,60,56,52,54,58,63,67,65,62,65,70,82,95,85,78,72,72,70,73,79,91,96,107,131,166,120,153,176,162,155,149,134,118,130,122,123,130,147,158,138,122,118],
+
+  events: [
+    { year: 1996, label: 'El Niño\nDrought', color: '#f59e0b',
+      desc: '1996 El Niño — Severe global weather disruptions + historically low grain reserves push food prices to 1990s high. World Bank issues food security warning.' },
+    { year: 2007, label: 'Pre-Crisis\nBuild-Up', color: '#f97316',
+      desc: '2007 Price Build-Up — US biofuel mandates redirect corn from food; rising oil costs push fertilizer and transport prices higher, triggering global alarm.' },
+    { year: 2008, label: 'Global Food\nCrisis', color: '#ef4444',
+      desc: '2007-08 Global Food Crisis — Perfect storm: biofuels, drought, export bans, and speculation. FAO index hits 166. Food riots erupt in 30+ countries.' },
+    { year: 2010, label: 'Russian\nWheat Ban', color: '#f59e0b',
+      desc: '2010 Russian Drought — Russia bans wheat exports after worst drought in 50 years, triggering global grain price surge that stokes political unrest.' },
+    { year: 2011, label: 'Arab Spring\nPeak', color: '#ef4444',
+      desc: '2011 Arab Spring — FAO index peaks at 176. Skyrocketing food prices are widely cited as a catalyst for political revolutions across North Africa and the Middle East.' },
+    { year: 2012, label: 'US Corn\nDrought', color: '#f59e0b',
+      desc: '2012 Great US Drought — Worst US drought in 50 years devastates corn and soybean crops, sharply reducing global grain stocks.' },
+    { year: 2020, label: 'COVID\nSupply Shock', color: '#6366f1',
+      desc: '2020 COVID-19 — Supply chain disruptions, labor shortages, panic buying, and port closures push food prices up 20%+ in some categories within months.' },
+    { year: 2022, label: 'Ukraine\nGrain Crisis', color: '#ef4444',
+      desc: '2022 Russia-Ukraine War — Russia blockades Ukrainian ports. Ukraine produces ~10% of global wheat and ~15% of corn. FAO index reaches record 158.' }
+  ],
+
+  commodities: [
+    { name: 'Wheat (CBOT)',           price: '$5.85',  unit: '/ bushel', chg: -6.2,  corr: 'Benchmark',        note: '' },
+    { name: 'Corn (CBOT)',            price: '$4.42',  unit: '/ bushel', chg: -3.8,  corr: 'Very High (0.88)', note: 'Feed & biofuel' },
+    { name: 'Soybeans',              price: '$10.05', unit: '/ bushel', chg: -5.4,  corr: 'Very High (0.86)', note: 'Protein & oil' },
+    { name: 'Rice (Rough)',           price: '$13.25', unit: '/ cwt',    chg: -8.1,  corr: 'High (0.72)',      note: 'Staple for 3B people' },
+    { name: 'Sugar #11 (World)',      price: '19.5¢',  unit: '/ lb',     chg: -15.2, corr: 'Moderate (0.60)',  note: '' },
+    { name: 'Coffee (Arabica)',       price: '330¢',   unit: '/ lb',     chg: +85.4, corr: 'Low (0.35)',       note: 'Supply disruption' },
+    { name: 'Cocoa',                  price: '$9.80',  unit: '/ lb',     chg: +42.1, corr: 'Low (0.30)',       note: 'W. Africa drought' },
+    { name: 'Palm Oil',               price: '$920',   unit: '/ tonne',  chg: -8.3,  corr: 'High (0.76)',      note: 'Global cooking oil' },
+    { name: 'Live Cattle',            price: '$1.89',  unit: '/ lb',     chg: +12.4, corr: 'Moderate (0.55)',  note: 'Drought, herd cuts' },
+    { name: 'Lean Hogs',              price: '$0.84',  unit: '/ lb',     chg: +5.6,  corr: 'Moderate (0.58)', note: 'Corn feed exposure' },
+    { name: 'Class III Milk',         price: '$17.50', unit: '/ cwt',    chg: -2.1,  corr: 'Moderate (0.52)', note: '' },
+    { name: 'Eggs (Large)',           price: '$4.85',  unit: '/ dozen',  chg: +38.2, corr: 'Moderate (0.45)', note: 'Avian flu outbreak' },
+  ],
+
+  stockYears: [2010,2011,2012,2013,2014,2015,2016,2017,2018,2019,2020,2021,2022,2023,2024,2025],
+
+  beneficiaries: [
+    { name: 'Archer-Daniels-Midland (ADM)', color: '#22c55e', prices: [29,36,29,44,48,42,42,43,46,45,53,63,93,79,54,50] },
+    { name: 'Bunge Global (BG)',             color: '#4ade80', prices: [62,69,68,83,85,75,69,76,59,55,63,89,117,104,95,88] },
+    { name: 'Mosaic Company (MOS)',          color: '#22d3ee', prices: [67,80,57,45,44,35,25,25,22,20,15,36,69,42,28,27] },
+    { name: 'Nutrien Ltd (NTR)',             color: '#a3e635', prices: [46,57,42,32,37,29,26,40,53,46,36,69,92,63,48,46] },
+    { name: 'CF Industries (CF)',            color: '#86efac', prices: [22,43,28,30,50,60,30,33,46,44,28,69,110,78,75,72] }
+  ],
+
+  sufferers: [
+    { name: 'General Mills (GIS)',        color: '#f87171', prices: [36,40,40,52,57,57,64,59,52,55,62,62,71,74,68,58] },
+    { name: 'Kraft Heinz (KHC)',          color: '#fb923c', prices: [null,null,null,null,null,62,87,77,38,30,33,41,38,35,30,28] },
+    { name: 'Tyson Foods (TSN)',          color: '#fbbf24', prices: [17,20,14,29,37,42,67,76,56,86,65,77,75,52,58,55] },
+    { name: "Pilgrim's Pride (PPC)",      color: '#e879f9', prices: [6,6,7,19,26,25,30,23,21,26,21,29,30,27,35,32] },
+    { name: 'Darden Restaurants (DRI)',   color: '#a78bfa', prices: [45,50,53,53,49,67,75,88,113,122,71,148,138,162,153,155] }
+  ],
+
+  stateImpact: [
+    { s:'MS', name:'Mississippi',    score:87, lean:'red',    desc:'Highest food insecurity in US (~21%), lowest median income, widespread food desert prevalence' },
+    { s:'WV', name:'West Virginia',  score:82, lean:'red',    desc:'Food insecurity ~18%, rural food deserts, declining industry wages leave few cushions' },
+    { s:'LA', name:'Louisiana',      score:79, lean:'red',    desc:'Food insecurity >17%, very high poverty, significant SNAP dependency' },
+    { s:'AR', name:'Arkansas',       score:76, lean:'red',    desc:'Food insecurity ~16%, rural poverty, limited access to affordable grocery options' },
+    { s:'AL', name:'Alabama',        score:74, lean:'red',    desc:'Food insecurity ~16%, high poverty in rural Black Belt counties' },
+    { s:'NM', name:'New Mexico',     score:72, lean:'blue',   desc:'Food insecurity ~17%, child hunger rate among highest nationally' },
+    { s:'KY', name:'Kentucky',       score:70, lean:'red',    desc:'Food insecurity ~15%, Appalachian food deserts, energy sector decline' },
+    { s:'OK', name:'Oklahoma',       score:68, lean:'red',    desc:'Food insecurity ~16%, Native American communities disproportionately impacted' },
+    { s:'TN', name:'Tennessee',      score:66, lean:'red',    desc:'Food insecurity ~14%, growing but unevenly distributed prosperity' },
+    { s:'SC', name:'South Carolina', score:64, lean:'red',    desc:'Food insecurity ~14%, rural coastal poverty, limited social safety net' },
+    { s:'GA', name:'Georgia',        score:62, lean:'purple', desc:'Food insecurity ~14%, high poverty in rural counties despite Atlanta\'s wealth' },
+    { s:'NC', name:'North Carolina', score:59, lean:'purple', desc:'Food insecurity ~14%, rural food deserts in eastern counties' },
+    { s:'TX', name:'Texas',          score:57, lean:'red',    desc:'Food insecurity ~13%, large low-income immigrant population, border colonia communities' },
+    { s:'AZ', name:'Arizona',        score:55, lean:'purple', desc:'Food insecurity ~13%, growing low-income suburban areas, tribal nation food access' },
+    { s:'MO', name:'Missouri',       score:53, lean:'red',    desc:'Food insecurity ~13%, urban food deserts in St. Louis and Kansas City' },
+    { s:'NV', name:'Nevada',         score:51, lean:'purple', desc:'Food insecurity ~12%, Las Vegas service workers have volatile, tip-dependent incomes' },
+    { s:'IN', name:'Indiana',        score:49, lean:'red',    desc:'Food insecurity ~13%, manufacturing belt poverty pockets' },
+    { s:'MI', name:'Michigan',       score:47, lean:'purple', desc:'Food insecurity ~12%, Detroit food deserts, hollowed-out auto sector' },
+    { s:'FL', name:'Florida',        score:46, lean:'purple', desc:'Food insecurity ~12%, large migrant farmworker population, seniors on fixed income' },
+    { s:'OH', name:'Ohio',           score:44, lean:'red',    desc:'Food insecurity ~12%, rust belt poverty, Appalachian eastern counties' },
+    { s:'ID', name:'Idaho',          score:42, lean:'red',    desc:'Food insecurity ~12%, rural pockets, migrant agricultural workers affected' },
+    { s:'SD', name:'South Dakota',   score:40, lean:'red',    desc:'Food insecurity ~12%, Native American reservation food insecurity crisis' },
+    { s:'MT', name:'Montana',        score:38, lean:'red',    desc:'Food insecurity ~11%, Native American communities, rural food access challenges' },
+    { s:'IA', name:'Iowa',           score:36, lean:'red',    desc:'Food insecurity ~10%; as a major farm state, rising prices have mixed effects' },
+    { s:'KS', name:'Kansas',         score:34, lean:'red',    desc:'Food insecurity ~10%; "Wheat State" — farmers benefit but consumers pay more' },
+    { s:'PA', name:'Pennsylvania',   score:33, lean:'purple', desc:'Food insecurity ~11%, Philadelphia food deserts, Appalachian rural poverty in east' },
+    { s:'WI', name:'Wisconsin',      score:31, lean:'purple', desc:'Food insecurity ~10%, dairy farming provides some buffer, Milwaukee urban poverty' },
+    { s:'AK', name:'Alaska',         score:29, lean:'red',    desc:'Very high food import costs due to remoteness; Permanent Fund dividends buffer impact' },
+    { s:'OR', name:'Oregon',         score:28, lean:'blue',   desc:'Food insecurity ~10%, rural eastern Oregon poverty, Portland affordability pressures' },
+    { s:'ME', name:'Maine',          score:27, lean:'blue',   desc:'Food insecurity ~11%, rural poverty, food access challenges, but strong local farms' },
+    { s:'MN', name:'Minnesota',      score:26, lean:'blue',   desc:'Food insecurity ~9%, major grain producer, strong state safety net programs' },
+    { s:'CO', name:'Colorado',       score:24, lean:'blue',   desc:'Food insecurity ~9%, Denver affordability crisis, rural eastern plains poverty' },
+    { s:'VA', name:'Virginia',       score:22, lean:'blue',   desc:'Food insecurity ~9%, federal employment base cushions major price shocks' },
+    { s:'IL', name:'Illinois',       score:20, lean:'blue',   desc:'Food insecurity ~10%, Chicago food banks strong, major corn/soybean producer' },
+    { s:'WA', name:'Washington',     score:18, lean:'blue',   desc:'Food insecurity ~9%, tech economy incomes and strong SNAP participation buffer spikes' },
+    { s:'NH', name:'New Hampshire',  score:17, lean:'purple', desc:'Food insecurity ~9%, relatively low poverty, New England social support programs' },
+    { s:'NE', name:'Nebraska',       score:16, lean:'red',    desc:'Food insecurity ~9%, major grain exporter; farm profits cushion consumer price rises' },
+    { s:'ND', name:'North Dakota',   score:15, lean:'red',    desc:'Food insecurity ~8%, large grain production, oil wealth cushions impact' },
+    { s:'UT', name:'Utah',           score:14, lean:'red',    desc:'Food insecurity ~8%, lower poverty, LDS community support systems extensive' },
+    { s:'WY', name:'Wyoming',        score:13, lean:'red',    desc:'Food insecurity ~8%, small population, mineral wealth buffers consumer price impact' },
+    { s:'MD', name:'Maryland',       score:12, lean:'blue',   desc:'Food insecurity ~8%, DC/Baltimore area incomes, robust food assistance programs' },
+    { s:'DE', name:'Delaware',       score:11, lean:'blue',   desc:'Food insecurity ~8%, small state, mid-Atlantic economic strength' },
+    { s:'HI', name:'Hawaii',         score:10, lean:'blue',   desc:'High food import costs due to location; high minimum wage and SNAP provide buffer' },
+    { s:'CT', name:'Connecticut',    score:9,  lean:'blue',   desc:'Food insecurity ~8%, high median income, strong food assistance programs' },
+    { s:'CA', name:'California',     score:8,  lean:'blue',   desc:'Food insecurity ~9%; as largest US farm state, complex mix of producers and consumers' },
+    { s:'RI', name:'Rhode Island',   score:7,  lean:'blue',   desc:'Food insecurity ~8%, small urban state, good social support network' },
+    { s:'MA', name:'Massachusetts',  score:6,  lean:'blue',   desc:'Food insecurity ~7%, very strong safety net, high incomes, robust food banks' },
+    { s:'NJ', name:'New Jersey',     score:5,  lean:'blue',   desc:'Food insecurity ~7%, highest median income among large states, NYC corridor' },
+    { s:'NY', name:'New York',       score:4,  lean:'blue',   desc:'Food insecurity ~9% but extensive food assistance, large agricultural sector in upstate' },
+    { s:'VT', name:'Vermont',        score:3,  lean:'blue',   desc:'Lowest food insecurity in US (~7%), strong local food system, robust SNAP participation' }
+  ]
+};
+
+// ═══════════════════════════════════════════════════════════
+// TAB SWITCHING
+// ═══════════════════════════════════════════════════════════
+function switchTab(tab) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active-oil','active-food'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  const btn = document.querySelector(`[data-tab="${tab}"]`);
+  btn.classList.add(tab === 'oil' ? 'active-oil' : 'active-food');
+}
+
+// ═══════════════════════════════════════════════════════════
+// RENDER EVENT LEGENDS
+// ═══════════════════════════════════════════════════════════
+function renderEventLegend(containerId, events) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = events.map(e => `
+    <div class="ev-item">
+      <div class="ev-dot" style="background:${e.color}"></div>
+      <div><span class="ev-year">${e.year}</span> <span class="ev-desc">${e.desc}</span></div>
+    </div>`).join('');
+}
+
+// ═══════════════════════════════════════════════════════════
+// RENDER COMMODITY TABLES
+// ═══════════════════════════════════════════════════════════
+function renderTable(tbodyId, rows) {
+  const tb = document.getElementById(tbodyId);
+  tb.innerHTML = rows.map(r => {
+    const chgClass = r.chg > 0 ? 'td-pos' : 'td-neg';
+    const chgStr = (r.chg > 0 ? '+' : '') + r.chg.toFixed(1) + '%';
+    const noteHtml = r.note ? `<span class="note-badge">${r.note}</span>` : '';
+    return `<tr>
+      <td class="td-name">${r.name}${noteHtml}</td>
+      <td class="td-price">${r.price}</td>
+      <td class="td-muted">${r.unit}</td>
+      <td class="${chgClass}">${chgStr}</td>
+      <td><span class="corr-badge">${r.corr}</span></td>
+      <td></td>
+    </tr>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════
+// HISTORY CHART BUILDER
+// ═══════════════════════════════════════════════════════════
+function buildHistoryChart(canvasId, startYear, prices, accentColor, yLabel, events) {
+  const data = prices.map((p, i) => ({ x: startYear + i, y: p }));
+  const ctx = document.getElementById(canvasId).getContext('2d');
+
+  // Gradient fill
+  const gradient = ctx.createLinearGradient(0, 0, 0, 370);
+  gradient.addColorStop(0, accentColor + '28');
+  gradient.addColorStop(1, accentColor + '00');
+
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      datasets: [{
+        label: yLabel,
+        data,
+        borderColor: accentColor,
+        backgroundColor: gradient,
+        borderWidth: 2.5,
+        pointRadius: 0,
+        pointHoverRadius: 6,
+        pointHoverBackgroundColor: accentColor,
+        fill: true,
+        tension: 0.3
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            title: items => `Year: ${items[0].parsed.x}`,
+            label: item => ` ${yLabel}: ${item.parsed.y % 1 === 0 ? item.parsed.y : item.parsed.y.toFixed(1)}`
+          }
+        },
+        annotation: { annotations: buildAnnotations(events) }
+      },
+      scales: {
+        x: {
+          type: 'linear', min: startYear, max: startYear + prices.length - 1,
+          ticks: { stepSize: 5, color: tickColor, font: { size: 11 }, callback: v => `'${String(v).slice(2)}` },
+          grid: { color: gridColor }
+        },
+        y: {
+          beginAtZero: true,
+          ticks: { color: tickColor, font: { size: 11 } },
+          grid: { color: gridColor },
+          title: { display: true, text: yLabel, color: tickColor, font: { size: 11 } }
+        }
+      }
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+// STOCK CHART BUILDER
+// ═══════════════════════════════════════════════════════════
+function buildStockChart(canvasId, years, companies, accentColor) {
+  const ctx = document.getElementById(canvasId).getContext('2d');
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      datasets: companies.map(c => ({
+        label: c.name,
+        data: years.map((yr, i) => c.prices[i] != null ? { x: yr, y: c.prices[i] } : null).filter(Boolean),
+        borderColor: c.color,
+        backgroundColor: c.color + '18',
+        borderWidth: 2,
+        pointRadius: 3,
+        pointHoverRadius: 6,
+        fill: false,
+        tension: 0.25,
+        spanGaps: false
+      }))
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: {
+          position: 'top',
+          labels: { color: '#a3b4c8', font: { size: 11 }, boxWidth: 14, padding: 14 }
+        },
+        tooltip: {
+          callbacks: {
+            title: items => `Year: ${items[0].parsed.x}`,
+            label: item => ` ${item.dataset.label}: $${item.parsed.y}`
+          }
+        },
+        annotation: {
+          annotations: {
+            mark14: { type:'line', xMin:2014, xMax:2014, borderColor:'rgba(255,255,255,0.15)', borderWidth:1, borderDash:[4,4], label:{display:true, content:'2014', rotation:-90, position:'start', color:'rgba(255,255,255,0.35)', backgroundColor:'transparent', font:{size:9}} },
+            mark20: { type:'line', xMin:2020, xMax:2020, borderColor:'rgba(255,255,255,0.15)', borderWidth:1, borderDash:[4,4], label:{display:true, content:'COVID', rotation:-90, position:'start', color:'rgba(255,255,255,0.35)', backgroundColor:'transparent', font:{size:9}} },
+            mark22: { type:'line', xMin:2022, xMax:2022, borderColor:'rgba(255,255,255,0.15)', borderWidth:1, borderDash:[4,4], label:{display:true, content:'Ukraine', rotation:-90, position:'start', color:'rgba(255,255,255,0.35)', backgroundColor:'transparent', font:{size:9}} }
+          }
+        }
+      },
+      scales: {
+        x: {
+          type: 'linear', min: 2010, max: 2025,
+          ticks: { stepSize: 1, color: tickColor, font: { size: 10 } },
+          grid: { color: gridColor }
+        },
+        y: {
+          ticks: { color: tickColor, font: { size: 11 }, callback: v => '$' + v },
+          grid: { color: gridColor },
+          title: { display: true, text: 'Stock Price (USD)', color: tickColor, font: { size: 11 } }
+        }
+      }
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+// STATE QoL CHART BUILDER
+// ═══════════════════════════════════════════════════════════
+function leanColor(lean) {
+  if (lean === 'red')    return 'rgba(239,68,68,0.72)';
+  if (lean === 'blue')   return 'rgba(59,130,246,0.72)';
+  return 'rgba(168,85,247,0.72)';
+}
+
+function buildStateChart(canvasId, stateData) {
+  // Sort descending by score
+  const sorted = [...stateData].sort((a, b) => b.score - a.score);
+  const ctx = document.getElementById(canvasId).getContext('2d');
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: sorted.map(s => s.s),
+      datasets: [{
+        data: sorted.map(s => s.score),
+        backgroundColor: sorted.map(s => leanColor(s.lean)),
+        borderColor: sorted.map(s => leanColor(s.lean).replace('0.72','0.95')),
+        borderWidth: 1,
+        borderRadius: 3
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            title: items => sorted[items[0].dataIndex].name,
+            label: item => ` Impact Score: ${item.parsed.x} / 100`,
+            afterLabel: item => ` ${sorted[item.dataIndex].desc}`
+          },
+          bodyColor: '#e8edf5',
+          titleColor: '#f0f0f0',
+          titleFont: { size: 13, weight: '700' },
+          bodyFont: { size: 11 },
+          maxWidth: 280
+        }
+      },
+      scales: {
+        x: {
+          min: 0, max: 100,
+          ticks: { color: tickColor, font: { size: 11 } },
+          grid: { color: gridColor },
+          title: { display: true, text: 'Impact Score  (0 = minimal impact → 100 = severely impacted)', color: tickColor, font: { size: 11 } }
+        },
+        y: {
+          ticks: { color: '#c8d4e0', font: { size: 10.5 } },
+          grid: { display: false }
+        }
+      }
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+// INIT ALL
+// ═══════════════════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', () => {
+  // Oil history
+  buildHistoryChart('oilHistoryChart', 1975, OIL.prices, '#f59e0b', '$/barrel (WTI Crude)', OIL.events);
+  renderEventLegend('oilEvLegend', OIL.events);
+  renderTable('oilCommodityTbody', OIL.commodities);
+  buildStockChart('oilBenChart', OIL.stockYears, OIL.beneficiaries, '#f59e0b');
+  buildStockChart('oilHurtChart', OIL.stockYears, OIL.sufferers, '#60a5fa');
+  buildStateChart('oilStateChart', OIL.stateImpact);
+
+  // Food history
+  buildHistoryChart('foodHistoryChart', 1975, FOOD.prices, '#22c55e', 'FAO Food Price Index (2014-16=100)', FOOD.events);
+  renderEventLegend('foodEvLegend', FOOD.events);
+  renderTable('foodCommodityTbody', FOOD.commodities);
+  buildStockChart('foodBenChart', FOOD.stockYears, FOOD.beneficiaries, '#22c55e');
+  buildStockChart('foodHurtChart', FOOD.stockYears, FOOD.sufferers, '#f87171');
+  buildStateChart('foodStateChart', FOOD.stateImpact);
+});
+</script>
+</body>
+</html>
