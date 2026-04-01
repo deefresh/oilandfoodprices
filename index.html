@@ -84,13 +84,16 @@
       display: flex;
       justify-content: center;
       gap: 8px;
-      padding: 24px 16px 0;
+      padding: 20px 16px 0;
+      position: -webkit-sticky;
       position: sticky;
       top: 0;
       z-index: 100;
       background: var(--bg);
       border-bottom: 1px solid var(--border);
       padding-bottom: 0;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
     }
     .tab-btn {
       position: relative;
@@ -168,6 +171,11 @@
       width: 100%;
     }
     .chart-wrap canvas { display: block; }
+    .chart-main  { height: 370px; }
+    .chart-stock { height: 340px; }
+
+    /* ── TABLE SCROLL ── */
+    .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 
     /* ── EVENT LEGEND ── */
     .event-legend {
@@ -281,13 +289,85 @@
     .section-label.oil { color: var(--oil); border-bottom-color: rgba(245,158,11,0.25); }
     .section-label.food { color: var(--food); border-bottom-color: rgba(34,197,94,0.25); }
 
-    @media (max-width: 768px) {
+    /* ── RESPONSIVE BREAKPOINTS ── */
+
+    /* Tablet (≤1024px) */
+    @media (max-width: 1024px) {
       .stats-row { grid-template-columns: repeat(2, 1fr); }
-      .panel { padding: 20px; }
-      .state-chart-wrap { height: 820px; }
     }
-    @media (max-width: 480px) {
-      .stats-row { grid-template-columns: 1fr 1fr; }
+
+    /* Large phone landscape / small tablet (≤768px) */
+    @media (max-width: 768px) {
+      .site-header { padding: 28px 16px 22px; }
+      .site-header p { font-size: 0.88rem; }
+      .container { padding: 20px 14px 48px; }
+      .stats-row { grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 18px; }
+      .stat-card { padding: 16px 18px; }
+      .stat-value { font-size: 1.4rem; }
+      .panel { padding: 20px; border-radius: 14px; }
+      .panel-title { font-size: 0.98rem; }
+      .panel-sub { font-size: 0.78rem; margin-bottom: 18px; }
+      .chart-main  { height: 280px; }
+      .chart-stock { height: 260px; }
+      .state-chart-wrap { height: 820px; }
+      .section-label { margin: 26px 0 14px; }
+      .ev-item { flex: 1 1 100%; max-width: 100%; }
+      .tab-btn { padding: 12px 20px; font-size: 0.87rem; }
+    }
+
+    /* Phone landscape / large phone portrait (≤600px) */
+    @media (max-width: 600px) {
+      .tab-nav { gap: 0; padding-top: 12px; }
+      .tab-btn { flex: 1; text-align: center; padding: 12px 8px; font-size: 0.85rem; }
+      .tab-icon { margin-right: 5px; }
+      .stats-row { gap: 8px; }
+      .stat-card { padding: 14px; }
+      .stat-value { font-size: 1.3rem; }
+      .stat-label { font-size: 0.68rem; }
+      .stat-sub { font-size: 0.7rem; }
+      .panel { padding: 16px; }
+      .panel-title { font-size: 0.93rem; }
+      .chart-main  { height: 240px; }
+      .chart-stock { height: 220px; }
+      .state-chart-wrap { height: 730px; }
+      .data-table { font-size: 0.82rem; }
+      .data-table th { padding: 8px 10px; font-size: 0.65rem; }
+      .data-table td { padding: 10px; }
+    }
+
+    /* Phone portrait (≤430px) */
+    @media (max-width: 430px) {
+      .site-header { padding: 22px 14px 18px; }
+      .last-updated { font-size: 0.7rem; padding: 3px 10px; }
+      .container { padding: 16px 12px 40px; }
+      .stats-row { grid-template-columns: repeat(2, 1fr); gap: 7px; margin-bottom: 14px; }
+      .stat-card { padding: 12px; border-radius: 10px; }
+      .stat-value { font-size: 1.15rem; letter-spacing: -0.02em; }
+      .stat-label { font-size: 0.65rem; margin-bottom: 5px; }
+      .stat-sub { font-size: 0.67rem; }
+      .panel { padding: 14px; border-radius: 12px; margin-bottom: 14px; }
+      .panel-title { font-size: 0.88rem; }
+      .panel-sub { font-size: 0.75rem; margin-bottom: 14px; }
+      .chart-main  { height: 215px; }
+      .chart-stock { height: 195px; }
+      .state-chart-wrap { height: 650px; }
+      .section-label { margin: 20px 0 10px; font-size: 0.65rem; }
+      .sl-item { font-size: 0.75rem; }
+      .state-legend { gap: 10px; margin-bottom: 14px; }
+      .data-table { font-size: 0.78rem; }
+      .data-table th { padding: 7px 8px; font-size: 0.62rem; }
+      .data-table td { padding: 8px; }
+      .corr-badge { font-size: 0.67rem; padding: 2px 5px; }
+      .note-badge { font-size: 0.65rem; padding: 1px 5px; margin-left: 4px; }
+      .ev-item { padding: 7px 10px; font-size: 0.72rem; }
+    }
+
+    /* Very small phones (≤360px) */
+    @media (max-width: 360px) {
+      .stat-value { font-size: 1.05rem; }
+      .chart-main  { height: 195px; }
+      .chart-stock { height: 175px; }
+      .state-chart-wrap { height: 600px; }
     }
   </style>
 </head>
@@ -296,7 +376,7 @@
 <header class="site-header">
   <h1>Global Commodity Impact Dashboard</h1>
   <p>How world events shape the price of oil &amp; food — and what that means for your household, your investments, and your state</p>
-  <span class="last-updated">Data: approximate historical values &amp; estimates through Q1 2025</span>
+  <span class="last-updated">Prices &amp; data as of April 1, 2025 · Historical values approximate · Not financial advice</span>
 </header>
 
 <nav class="tab-nav">
@@ -317,23 +397,23 @@
   <div class="stats-row" style="margin-top:24px">
     <div class="stat-card">
       <div class="stat-label">WTI Crude Oil</div>
-      <div class="stat-value oil-color">$71.50</div>
-      <div class="stat-sub">per barrel · Mar 2025</div>
+      <div class="stat-value oil-color">$69.20</div>
+      <div class="stat-sub">per barrel · Apr 1, 2025</div>
     </div>
     <div class="stat-card">
       <div class="stat-label">YTD Change</div>
-      <div class="stat-value neg">−8.2%</div>
-      <div class="stat-sub">vs Jan 1, 2025</div>
+      <div class="stat-value neg">−9.4%</div>
+      <div class="stat-sub">vs Jan 1, 2025 ($76.40)</div>
     </div>
     <div class="stat-card">
       <div class="stat-label">52-Week High</div>
-      <div class="stat-value" style="color:var(--muted2)">$87.63</div>
-      <div class="stat-sub">Apr 5, 2024</div>
+      <div class="stat-value" style="color:var(--muted2)">$84.52</div>
+      <div class="stat-sub">Jul 5, 2024</div>
     </div>
     <div class="stat-card">
       <div class="stat-label">52-Week Low</div>
-      <div class="stat-value" style="color:var(--muted2)">$65.27</div>
-      <div class="stat-sub">Sep 10, 2024</div>
+      <div class="stat-value" style="color:var(--muted2)">$64.75</div>
+      <div class="stat-sub">Mar 18, 2025</div>
     </div>
   </div>
 
@@ -341,7 +421,7 @@
   <div class="panel">
     <div class="panel-title">WTI Crude Oil Price (1975 – 2025)</div>
     <div class="panel-sub">Annual average $/barrel · Annotated with major price-moving events</div>
-    <div class="chart-wrap" style="height:370px"><canvas id="oilHistoryChart"></canvas></div>
+    <div class="chart-wrap chart-main"><canvas id="oilHistoryChart"></canvas></div>
     <div class="event-legend" id="oilEvLegend"></div>
   </div>
 
@@ -349,6 +429,7 @@
   <div class="panel">
     <div class="panel-title">Oil &amp; Correlated Commodity Prices</div>
     <div class="panel-sub">Current market prices for commodities that move with crude oil</div>
+    <div class="table-scroll">
     <table class="data-table">
       <thead>
         <tr>
@@ -362,19 +443,33 @@
       </thead>
       <tbody id="oilCommodityTbody"></tbody>
     </table>
+    </div>
   </div>
 
   <p class="section-label oil">Market Winners &amp; Losers</p>
   <div class="panel">
     <div class="panel-title">Top 5 Companies That Benefit During Oil Price Spikes</div>
     <div class="panel-sub">Annual stock price (USD) · 2010 – 2025 · Integrated majors &amp; E&amp;P producers</div>
-    <div class="chart-wrap" style="height:340px"><canvas id="oilBenChart"></canvas></div>
+    <div class="chart-wrap chart-stock"><canvas id="oilBenChart"></canvas></div>
   </div>
 
   <div class="panel">
     <div class="panel-title">Top 5 Companies Hurt by High Oil Prices</div>
     <div class="panel-sub">Annual stock price (USD) · 2010 – 2025 · Airlines &amp; fuel-intensive industries</div>
-    <div class="chart-wrap" style="height:340px"><canvas id="oilHurtChart"></canvas></div>
+    <div class="chart-wrap chart-stock"><canvas id="oilHurtChart"></canvas></div>
+  </div>
+
+  <p class="section-label oil">Sector &amp; Industry Impact</p>
+  <div class="panel">
+    <div class="panel-title">Top 5 Sectors That Benefit During Oil Price Spikes</div>
+    <div class="panel-sub">ETF price performance (USD) · 2010 – 2025 · Energy sector funds &amp; upstream plays · Key events: 2014 crash, COVID, Ukraine war</div>
+    <div class="chart-wrap chart-stock"><canvas id="oilBenSectorChart"></canvas></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Top 5 Sectors Most Hurt by High Oil Prices</div>
+    <div class="panel-sub">ETF price performance (USD) · 2010 – 2025 · Airlines, transport, consumer spending &amp; materials · Key events: 2014 crash, COVID, Ukraine war</div>
+    <div class="chart-wrap chart-stock"><canvas id="oilHurtSectorChart"></canvas></div>
   </div>
 
   <p class="section-label oil">Quality of Life Impact by State</p>
@@ -401,13 +496,13 @@
   <div class="stats-row" style="margin-top:24px">
     <div class="stat-card">
       <div class="stat-label">FAO Food Price Index</div>
-      <div class="stat-value food-color">118.4</div>
-      <div class="stat-sub">Index pts (2014-16 = 100) · Mar 2025</div>
+      <div class="stat-value food-color">117.3</div>
+      <div class="stat-sub">Index pts (2014-16 = 100) · Apr 1, 2025</div>
     </div>
     <div class="stat-card">
       <div class="stat-label">YTD Change</div>
-      <div class="stat-value neg">−3.7%</div>
-      <div class="stat-sub">vs Jan 1, 2025</div>
+      <div class="stat-value neg">−2.1%</div>
+      <div class="stat-sub">vs Jan 1, 2025 (119.8)</div>
     </div>
     <div class="stat-card">
       <div class="stat-label">All-Time High</div>
@@ -425,7 +520,7 @@
   <div class="panel">
     <div class="panel-title">FAO Global Food Price Index (1975 – 2025)</div>
     <div class="panel-sub">Annual composite index (2014–2016 baseline = 100) · Annotated with major food crises and supply shocks</div>
-    <div class="chart-wrap" style="height:370px"><canvas id="foodHistoryChart"></canvas></div>
+    <div class="chart-wrap chart-main"><canvas id="foodHistoryChart"></canvas></div>
     <div class="event-legend" id="foodEvLegend"></div>
   </div>
 
@@ -433,6 +528,7 @@
   <div class="panel">
     <div class="panel-title">Food &amp; Agricultural Commodity Prices</div>
     <div class="panel-sub">Current market prices for key food commodities tracked by the FAO</div>
+    <div class="table-scroll">
     <table class="data-table">
       <thead>
         <tr>
@@ -446,19 +542,33 @@
       </thead>
       <tbody id="foodCommodityTbody"></tbody>
     </table>
+    </div>
   </div>
 
   <p class="section-label food">Market Winners &amp; Losers</p>
   <div class="panel">
     <div class="panel-title">Top 5 Companies That Benefit During Food Price Spikes</div>
     <div class="panel-sub">Annual stock price (USD) · 2010 – 2025 · Grain traders, fertilizer producers &amp; agri-input companies</div>
-    <div class="chart-wrap" style="height:340px"><canvas id="foodBenChart"></canvas></div>
+    <div class="chart-wrap chart-stock"><canvas id="foodBenChart"></canvas></div>
   </div>
 
   <div class="panel">
     <div class="panel-title">Top 5 Companies Hurt by High Food Prices</div>
     <div class="panel-sub">Annual stock price (USD) · 2010 – 2025 · Food manufacturers, processors &amp; restaurant chains facing margin compression</div>
-    <div class="chart-wrap" style="height:340px"><canvas id="foodHurtChart"></canvas></div>
+    <div class="chart-wrap chart-stock"><canvas id="foodHurtChart"></canvas></div>
+  </div>
+
+  <p class="section-label food">Sector &amp; Industry Impact</p>
+  <div class="panel">
+    <div class="panel-title">Top 5 Sectors That Benefit During Food Price Spikes</div>
+    <div class="panel-sub">ETF price performance (USD) · 2010 – 2025 · Agribusiness, grain &amp; fertilizer funds · Key events: 2011 peak, COVID, Ukraine war</div>
+    <div class="chart-wrap chart-stock"><canvas id="foodBenSectorChart"></canvas></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Top 5 Sectors Most Hurt by High Food Prices</div>
+    <div class="panel-sub">ETF price performance (USD) · 2010 – 2025 · Consumer staples, food &amp; beverage, retail · Key events: 2011 peak, COVID, Ukraine war</div>
+    <div class="chart-wrap chart-stock"><canvas id="foodHurtSectorChart"></canvas></div>
   </div>
 
   <p class="section-label food">Quality of Life Impact by State</p>
@@ -545,7 +655,7 @@ function buildAnnotations(events) {
 // OIL DATA
 // ═══════════════════════════════════════════════════════════
 const OIL = {
-  prices: [12,13,14,14,25,35,36,33,29,29,27,14,18,15,18,24,21,20,17,17,17,22,19,13,18,30,26,26,31,41,56,66,72,100,62,79,95,94,98,93,49,43,51,65,57,42,68,95,77,76,70],
+  prices: [12,13,14,14,25,35,36,33,29,29,27,14,18,15,18,24,21,20,17,17,17,22,19,13,18,30,26,26,31,41,56,66,72,100,62,79,95,94,98,93,49,43,51,65,57,42,68,95,77,78,69],
 
   events: [
     { year: 1973, label: 'Arab\nEmbargo', color: '#ef4444',
@@ -569,17 +679,17 @@ const OIL = {
   ],
 
   commodities: [
-    { name: 'WTI Crude Oil',        price: '$71.50',  unit: '/ barrel', chg: -8.2,  corr: 'Benchmark',       note: '' },
-    { name: 'Brent Crude Oil',      price: '$75.25',  unit: '/ barrel', chg: -7.6,  corr: 'Very High (0.97)', note: 'Global benchmark' },
-    { name: 'Natural Gas (HH)',     price: '$2.85',   unit: '/ MMBtu',  chg: -12.4, corr: 'High (0.74)',      note: '' },
-    { name: 'Gasoline (RBOB)',      price: '$2.22',   unit: '/ gallon', chg: -5.8,  corr: 'Very High (0.95)', note: 'Refinery output' },
-    { name: 'Diesel (ULSD)',        price: '$2.68',   unit: '/ gallon', chg: -9.1,  corr: 'Very High (0.94)', note: '' },
-    { name: 'Jet Fuel',             price: '$2.45',   unit: '/ gallon', chg: -6.3,  corr: 'Very High (0.93)', note: 'Airline cost driver' },
-    { name: 'Heating Oil',          price: '$2.52',   unit: '/ gallon', chg: -8.7,  corr: 'Very High (0.96)', note: 'NE US heating' },
-    { name: 'Propane',              price: '$0.78',   unit: '/ gallon', chg: -14.2, corr: 'High (0.78)',      note: 'Rural heat/cooking' },
-    { name: 'Polyethylene (HDPE)',  price: '$0.68',   unit: '/ lb',     chg: -2.1,  corr: 'Moderate (0.65)', note: 'Plastic packaging' },
-    { name: 'Polypropylene',        price: '$0.72',   unit: '/ lb',     chg: -1.8,  corr: 'Moderate (0.63)', note: 'Auto / industrial' },
-    { name: 'Ammonia (Fertilizer)', price: '$380',    unit: '/ tonne',  chg: -18.5, corr: 'High (0.82)',     note: 'Nat gas feedstock' },
+    { name: 'WTI Crude Oil',        price: '$69.20',  unit: '/ barrel', chg: -9.4,  corr: 'Benchmark',       note: '' },
+    { name: 'Brent Crude Oil',      price: '$73.10',  unit: '/ barrel', chg: -7.8,  corr: 'Very High (0.97)', note: 'Global benchmark' },
+    { name: 'Natural Gas (HH)',     price: '$3.52',   unit: '/ MMBtu',  chg: -9.5,  corr: 'High (0.74)',      note: '' },
+    { name: 'Gasoline (RBOB)',      price: '$2.54',   unit: '/ gallon', chg: +6.3,  corr: 'Very High (0.95)', note: 'Spring season rise' },
+    { name: 'Diesel (ULSD)',        price: '$2.72',   unit: '/ gallon', chg: -3.2,  corr: 'Very High (0.94)', note: '' },
+    { name: 'Jet Fuel',             price: '$2.55',   unit: '/ gallon', chg: -2.9,  corr: 'Very High (0.93)', note: 'Airline cost driver' },
+    { name: 'Heating Oil',          price: '$2.50',   unit: '/ gallon', chg: -5.8,  corr: 'Very High (0.96)', note: 'NE US heating' },
+    { name: 'Propane',              price: '$0.65',   unit: '/ gallon', chg: -22.6, corr: 'High (0.78)',      note: 'Spring demand drop' },
+    { name: 'Polyethylene (HDPE)',  price: '$0.71',   unit: '/ lb',     chg: +4.4,  corr: 'Moderate (0.65)', note: 'Plastic packaging' },
+    { name: 'Polypropylene',        price: '$0.74',   unit: '/ lb',     chg: +2.8,  corr: 'Moderate (0.63)', note: 'Auto / industrial' },
+    { name: 'Ammonia (Fertilizer)', price: '$435',    unit: '/ tonne',  chg: +14.5, corr: 'High (0.82)',     note: 'Spring planting surge' },
   ],
 
   stockYears: [2010,2011,2012,2013,2014,2015,2016,2017,2018,2019,2020,2021,2022,2023,2024,2025],
@@ -680,18 +790,18 @@ const FOOD = {
   ],
 
   commodities: [
-    { name: 'Wheat (CBOT)',           price: '$5.85',  unit: '/ bushel', chg: -6.2,  corr: 'Benchmark',        note: '' },
-    { name: 'Corn (CBOT)',            price: '$4.42',  unit: '/ bushel', chg: -3.8,  corr: 'Very High (0.88)', note: 'Feed & biofuel' },
-    { name: 'Soybeans',              price: '$10.05', unit: '/ bushel', chg: -5.4,  corr: 'Very High (0.86)', note: 'Protein & oil' },
-    { name: 'Rice (Rough)',           price: '$13.25', unit: '/ cwt',    chg: -8.1,  corr: 'High (0.72)',      note: 'Staple for 3B people' },
-    { name: 'Sugar #11 (World)',      price: '19.5¢',  unit: '/ lb',     chg: -15.2, corr: 'Moderate (0.60)',  note: '' },
-    { name: 'Coffee (Arabica)',       price: '330¢',   unit: '/ lb',     chg: +85.4, corr: 'Low (0.35)',       note: 'Supply disruption' },
-    { name: 'Cocoa',                  price: '$9.80',  unit: '/ lb',     chg: +42.1, corr: 'Low (0.30)',       note: 'W. Africa drought' },
-    { name: 'Palm Oil',               price: '$920',   unit: '/ tonne',  chg: -8.3,  corr: 'High (0.76)',      note: 'Global cooking oil' },
-    { name: 'Live Cattle',            price: '$1.89',  unit: '/ lb',     chg: +12.4, corr: 'Moderate (0.55)',  note: 'Drought, herd cuts' },
-    { name: 'Lean Hogs',              price: '$0.84',  unit: '/ lb',     chg: +5.6,  corr: 'Moderate (0.58)', note: 'Corn feed exposure' },
-    { name: 'Class III Milk',         price: '$17.50', unit: '/ cwt',    chg: -2.1,  corr: 'Moderate (0.52)', note: '' },
-    { name: 'Eggs (Large)',           price: '$4.85',  unit: '/ dozen',  chg: +38.2, corr: 'Moderate (0.45)', note: 'Avian flu outbreak' },
+    { name: 'Wheat (CBOT)',           price: '$5.42',  unit: '/ bushel', chg: -7.8,   corr: 'Benchmark',        note: '' },
+    { name: 'Corn (CBOT)',            price: '$4.68',  unit: '/ bushel', chg: +5.9,   corr: 'Very High (0.88)', note: 'Feed & biofuel' },
+    { name: 'Soybeans',              price: '$9.78',  unit: '/ bushel', chg: -2.7,   corr: 'Very High (0.86)', note: 'Protein & oil' },
+    { name: 'Rice (Rough)',           price: '$14.35', unit: '/ cwt',    chg: +8.2,   corr: 'High (0.72)',      note: 'Asian demand surge' },
+    { name: 'Sugar #11 (World)',      price: '20.1¢',  unit: '/ lb',     chg: +3.1,   corr: 'Moderate (0.60)',  note: '' },
+    { name: 'Coffee (Arabica)',       price: '378¢',   unit: '/ lb',     chg: +118.6, corr: 'Low (0.35)',       note: 'Brazil drought record' },
+    { name: 'Cocoa',                  price: '$8.42',  unit: '/ lb',     chg: +22.6,  corr: 'Low (0.30)',       note: 'Still near record high' },
+    { name: 'Palm Oil',               price: '$895',   unit: '/ tonne',  chg: -3.8,   corr: 'High (0.76)',      note: 'Global cooking oil' },
+    { name: 'Live Cattle',            price: '$2.07',  unit: '/ lb',     chg: +18.3,  corr: 'Moderate (0.55)',  note: 'Tight herd supply' },
+    { name: 'Lean Hogs',              price: '$0.91',  unit: '/ lb',     chg: +8.1,   corr: 'Moderate (0.58)', note: 'Corn feed exposure' },
+    { name: 'Class III Milk',         price: '$19.20', unit: '/ cwt',    chg: +9.7,   corr: 'Moderate (0.52)', note: '' },
+    { name: 'Eggs (Large)',           price: '$5.90',  unit: '/ dozen',  chg: +68.6,  corr: 'Moderate (0.45)', note: 'H5N1 avian flu crisis' },
   ],
 
   stockYears: [2010,2011,2012,2013,2014,2015,2016,2017,2018,2019,2020,2021,2022,2023,2024,2025],
@@ -868,10 +978,22 @@ function buildHistoryChart(canvasId, startYear, prices, accentColor, yLabel, eve
   });
 }
 
+// Default event mark sets for stock/ETF charts
+const OIL_MARKS = {
+  mark14: { type:'line', xMin:2014, xMax:2014, borderColor:'rgba(255,255,255,0.15)', borderWidth:1, borderDash:[4,4], label:{display:true, content:'2014 Crash', rotation:-90, position:'start', color:'rgba(255,255,255,0.35)', backgroundColor:'transparent', font:{size:9}} },
+  mark20: { type:'line', xMin:2020, xMax:2020, borderColor:'rgba(255,255,255,0.15)', borderWidth:1, borderDash:[4,4], label:{display:true, content:'COVID', rotation:-90, position:'start', color:'rgba(255,255,255,0.35)', backgroundColor:'transparent', font:{size:9}} },
+  mark22: { type:'line', xMin:2022, xMax:2022, borderColor:'rgba(255,255,255,0.15)', borderWidth:1, borderDash:[4,4], label:{display:true, content:'Ukraine', rotation:-90, position:'start', color:'rgba(255,255,255,0.35)', backgroundColor:'transparent', font:{size:9}} }
+};
+const FOOD_MARKS = {
+  mark11: { type:'line', xMin:2011, xMax:2011, borderColor:'rgba(255,255,255,0.15)', borderWidth:1, borderDash:[4,4], label:{display:true, content:'2011 Peak', rotation:-90, position:'start', color:'rgba(255,255,255,0.35)', backgroundColor:'transparent', font:{size:9}} },
+  mark20: { type:'line', xMin:2020, xMax:2020, borderColor:'rgba(255,255,255,0.15)', borderWidth:1, borderDash:[4,4], label:{display:true, content:'COVID', rotation:-90, position:'start', color:'rgba(255,255,255,0.35)', backgroundColor:'transparent', font:{size:9}} },
+  mark22: { type:'line', xMin:2022, xMax:2022, borderColor:'rgba(255,255,255,0.15)', borderWidth:1, borderDash:[4,4], label:{display:true, content:'Ukraine', rotation:-90, position:'start', color:'rgba(255,255,255,0.35)', backgroundColor:'transparent', font:{size:9}} }
+};
+
 // ═══════════════════════════════════════════════════════════
-// STOCK CHART BUILDER
+// STOCK / ETF CHART BUILDER
 // ═══════════════════════════════════════════════════════════
-function buildStockChart(canvasId, years, companies, accentColor) {
+function buildStockChart(canvasId, years, companies, accentColor, eventMarks) {
   const ctx = document.getElementById(canvasId).getContext('2d');
   new Chart(ctx, {
     type: 'line',
@@ -904,13 +1026,7 @@ function buildStockChart(canvasId, years, companies, accentColor) {
             label: item => ` ${item.dataset.label}: $${item.parsed.y}`
           }
         },
-        annotation: {
-          annotations: {
-            mark14: { type:'line', xMin:2014, xMax:2014, borderColor:'rgba(255,255,255,0.15)', borderWidth:1, borderDash:[4,4], label:{display:true, content:'2014', rotation:-90, position:'start', color:'rgba(255,255,255,0.35)', backgroundColor:'transparent', font:{size:9}} },
-            mark20: { type:'line', xMin:2020, xMax:2020, borderColor:'rgba(255,255,255,0.15)', borderWidth:1, borderDash:[4,4], label:{display:true, content:'COVID', rotation:-90, position:'start', color:'rgba(255,255,255,0.35)', backgroundColor:'transparent', font:{size:9}} },
-            mark22: { type:'line', xMin:2022, xMax:2022, borderColor:'rgba(255,255,255,0.15)', borderWidth:1, borderDash:[4,4], label:{display:true, content:'Ukraine', rotation:-90, position:'start', color:'rgba(255,255,255,0.35)', backgroundColor:'transparent', font:{size:9}} }
-          }
-        }
+        annotation: { annotations: eventMarks || OIL_MARKS }
       },
       scales: {
         x: {
@@ -921,12 +1037,71 @@ function buildStockChart(canvasId, years, companies, accentColor) {
         y: {
           ticks: { color: tickColor, font: { size: 11 }, callback: v => '$' + v },
           grid: { color: gridColor },
-          title: { display: true, text: 'Stock Price (USD)', color: tickColor, font: { size: 11 } }
+          title: { display: true, text: 'Price (USD)', color: tickColor, font: { size: 11 } }
         }
       }
     }
   });
 }
+
+// ═══════════════════════════════════════════════════════════
+// SECTOR ETF DATA
+// ═══════════════════════════════════════════════════════════
+const ETF_YEARS = [2010,2011,2012,2013,2014,2015,2016,2017,2018,2019,2020,2021,2022,2023,2024,2025];
+
+const OIL_SECTOR = {
+  beneficiaries: [
+    { name: 'XLE – Energy Select Sector SPDR', color: '#f59e0b',
+      prices: [57,75,73,87,78,59,73,68,56,65,37,53,93,87,89,83] },
+    { name: 'XOP – S&P Oil & Gas E&P ETF',     color: '#fcd34d',
+      prices: [49,67,63,75,58,32,40,33,27,24,12,23,47,45,40,37] },
+    { name: 'OIH – VanEck Oil Services ETF',   color: '#fb923c',
+      prices: [null,null,null,null,null,null,25,32,22,18,12,24,42,39,42,39] },
+    { name: 'AMLP – Alerian MLP ETF',          color: '#f97316',
+      prices: [16,17,17,19,20,14,13,13,10,10,6,9,11,12,13,12] },
+    { name: 'FCG – First Trust Natural Gas',   color: '#ef4444',
+      prices: [19,16,13,17,14,6,10,11,7,7,5,11,26,23,24,25] }
+  ],
+  sufferers: [
+    { name: 'JETS – U.S. Global Jets ETF',     color: '#60a5fa',
+      prices: [null,null,null,null,null,28,26,33,29,35,14,22,18,22,23,20] },
+    { name: 'IYT – iShares Transportation ETF',color: '#818cf8',
+      prices: [72,68,77,115,154,152,162,208,183,204,199,265,237,268,278,258] },
+    { name: 'XLY – Consumer Discretionary SPDR',color: '#34d399',
+      prices: [38,40,51,68,72,77,85,99,95,122,157,212,138,181,210,190] },
+    { name: 'XLB – Materials Select SPDR',     color: '#a78bfa',
+      prices: [34,35,38,47,47,42,49,61,55,64,72,91,79,91,97,88] },
+    { name: 'XLU – Utilities Select SPDR',     color: '#38bdf8',
+      prices: [31,35,37,36,46,43,50,53,52,66,61,73,65,65,76,71] }
+  ]
+};
+
+const FOOD_SECTOR = {
+  beneficiaries: [
+    { name: 'MOO – VanEck Agribusiness ETF',   color: '#22c55e',
+      prices: [49,57,52,57,57,51,58,63,57,65,72,87,87,77,72,68] },
+    { name: 'DBA – Invesco DB Agriculture Fund',color: '#4ade80',
+      prices: [29,33,28,28,28,23,22,21,19,20,19,22,24,22,21,21] },
+    { name: 'WEAT – Teucrium Wheat Fund',       color: '#86efac',
+      prices: [null,12,13,10,10,8,7,7,7,6,7,8,11,7,6,6] },
+    { name: 'CORN – Teucrium Corn Fund',        color: '#a3e635',
+      prices: [31,37,46,34,30,26,26,25,24,23,25,30,32,27,24,25] },
+    { name: 'SOYB – Teucrium Soybean Fund',     color: '#22d3ee',
+      prices: [null,39,43,37,35,29,30,31,29,29,33,40,42,33,30,29] }
+  ],
+  sufferers: [
+    { name: 'XLP – Consumer Staples SPDR',      color: '#f87171',
+      prices: [28,32,37,41,48,51,52,58,57,64,65,76,70,72,79,73] },
+    { name: 'PBJ – Invesco Food & Beverage ETF',color: '#fb923c',
+      prices: [17,18,20,23,25,27,28,29,28,33,34,37,37,40,44,40] },
+    { name: 'FTXG – First Trust Food & Bev ETF',color: '#fbbf24',
+      prices: [null,null,null,null,null,null,28,31,30,34,34,37,34,34,35,32] },
+    { name: 'XLY – Consumer Discretionary SPDR',color: '#e879f9',
+      prices: [38,40,51,68,72,77,85,99,95,122,157,212,138,181,210,190] },
+    { name: 'XRT – SPDR S&P Retail ETF',        color: '#a78bfa',
+      prices: [46,48,65,81,82,89,91,84,84,100,127,200,143,172,183,170] }
+  ]
+};
 
 // ═══════════════════════════════════════════════════════════
 // STATE QoL CHART BUILDER
@@ -992,20 +1167,24 @@ function buildStateChart(canvasId, stateData) {
 // INIT ALL
 // ═══════════════════════════════════════════════════════════
 window.addEventListener('DOMContentLoaded', () => {
-  // Oil history
+  // Oil tab
   buildHistoryChart('oilHistoryChart', 1975, OIL.prices, '#f59e0b', '$/barrel (WTI Crude)', OIL.events);
   renderEventLegend('oilEvLegend', OIL.events);
   renderTable('oilCommodityTbody', OIL.commodities);
-  buildStockChart('oilBenChart', OIL.stockYears, OIL.beneficiaries, '#f59e0b');
-  buildStockChart('oilHurtChart', OIL.stockYears, OIL.sufferers, '#60a5fa');
+  buildStockChart('oilBenChart',        OIL.stockYears, OIL.beneficiaries,        '#f59e0b', OIL_MARKS);
+  buildStockChart('oilHurtChart',       OIL.stockYears, OIL.sufferers,            '#60a5fa', OIL_MARKS);
+  buildStockChart('oilBenSectorChart',  ETF_YEARS,      OIL_SECTOR.beneficiaries, '#f59e0b', OIL_MARKS);
+  buildStockChart('oilHurtSectorChart', ETF_YEARS,      OIL_SECTOR.sufferers,     '#60a5fa', OIL_MARKS);
   buildStateChart('oilStateChart', OIL.stateImpact);
 
-  // Food history
+  // Food tab
   buildHistoryChart('foodHistoryChart', 1975, FOOD.prices, '#22c55e', 'FAO Food Price Index (2014-16=100)', FOOD.events);
   renderEventLegend('foodEvLegend', FOOD.events);
   renderTable('foodCommodityTbody', FOOD.commodities);
-  buildStockChart('foodBenChart', FOOD.stockYears, FOOD.beneficiaries, '#22c55e');
-  buildStockChart('foodHurtChart', FOOD.stockYears, FOOD.sufferers, '#f87171');
+  buildStockChart('foodBenChart',        FOOD.stockYears, FOOD.beneficiaries,        '#22c55e', FOOD_MARKS);
+  buildStockChart('foodHurtChart',       FOOD.stockYears, FOOD.sufferers,            '#f87171', FOOD_MARKS);
+  buildStockChart('foodBenSectorChart',  ETF_YEARS,       FOOD_SECTOR.beneficiaries, '#22c55e', FOOD_MARKS);
+  buildStockChart('foodHurtSectorChart', ETF_YEARS,       FOOD_SECTOR.sufferers,     '#f87171', FOOD_MARKS);
   buildStateChart('foodStateChart', FOOD.stateImpact);
 });
 </script>
